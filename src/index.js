@@ -15,14 +15,14 @@ function checksExistsUserAccount(request, response, next) {
     return response.send({
       error: "No username provider in headers.",
     });
-  const checkExistence = users.filter((user) => {
+  const user = users.find((user) => {
     return user.username == username;
   });
-  if (!checkExistence.length)
+  if (!user)
     return response.send({
       error: `User '${username}' not found.`,
     });
-  request.user = checkExistence.at(0);
+  request.user = user;
   return next();
 }
 
@@ -36,17 +36,17 @@ function avoidUserDuplication(request, response, next) {
     error: "This username has already exists.",
   });
 }
-// app.post("/users", avoidUserDuplication, (request, response) => {
-//   const { name, username } = request.body;
-//   const newUser = {
-//     id: uuidv4(),
-//     name,
-//     username,
-//     todos: [],
-//   };
-//   users.push(newUser);
-//   return response.send(newUser);
-// });
+app.post("/users", avoidUserDuplication, (request, response) => {
+  const { name, username } = request.body;
+  const newUser = {
+    id: uuidv4(),
+    name,
+    username,
+    todos: [],
+  };
+  users.push(newUser);
+  return response.send(newUser);
+});
 
 app.get("/todos", checksExistsUserAccount, (request, response) => {
   const { username } = request.headers;
