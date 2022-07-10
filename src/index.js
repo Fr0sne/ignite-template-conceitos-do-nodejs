@@ -36,7 +36,15 @@ function avoidUserDuplication(request, response, next) {
     error: "This username has already exists.",
   });
 }
-
+function targetUser(username) {
+  return (
+    users
+      .filter((user) => {
+        return user.username == username;
+      })
+      .at(0) || undefined
+  );
+}
 app.post("/users", avoidUserDuplication, (request, response) => {
   const { name, username } = request.body;
   const newUser = {
@@ -51,8 +59,12 @@ app.post("/users", avoidUserDuplication, (request, response) => {
 
 app.get("/todos", checksExistsUserAccount, (request, response) => {
   const { username } = request.headers;
-
-  return response.send(request.user.todos);
+  const userTarget = users
+    .filter((user) => {
+      return user.username == username;
+    })
+    .at(0);
+  return response.send(userTarget.todos);
 });
 
 app.post("/todos", checksExistsUserAccount, (request, response) => {
