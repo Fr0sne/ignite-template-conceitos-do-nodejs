@@ -76,7 +76,13 @@ app.post("/todos", checksExistsUserAccount, (request, response) => {
     deadline: new Date(deadline),
     created_at: new Date(),
   };
-  request.user.todos.push(newTodo);
+  const userTarget = users
+    .filter((user) => {
+      return user.username == request.headers.username;
+    })
+    .at(0);
+  userTarget.todos.push(newTodo);
+  // request.user.todos.push(newTodo);
   return response.status(201).send(newTodo);
 });
 

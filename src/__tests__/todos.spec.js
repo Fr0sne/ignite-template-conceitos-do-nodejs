@@ -2,7 +2,6 @@ const request = require("supertest");
 const { validate } = require("uuid");
 
 const app = require("../");
-// jest.setTimeout(30000);
 
 describe("Todos", () => {
   it("should be able to list all user's todo", async () => {
