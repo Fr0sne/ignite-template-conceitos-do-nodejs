@@ -82,14 +82,18 @@ app.post("/todos", checksExistsUserAccount, (request, response) => {
     })
     .at(0);
   userTarget.todos.push(newTodo);
-  // request.user.todos.push(newTodo);
   return response.status(201).send(newTodo);
 });
 
 app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
   const { title, deadline } = request.body;
   let index;
-  const todo = request.user.todos.filter((todo, i) => {
+  const userTarget = users
+    .filter((user) => {
+      return user.username == request.headers.username;
+    })
+    .at(0);
+  const todo = userTarget.todos.filter((todo, i) => {
     if (todo.id == request.params.id) {
       index = i;
       todo.deadline = deadline;
@@ -106,7 +110,12 @@ app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
 
 app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
   let index;
-  const todo = request.user.todos.filter((todo, i) => {
+  const userTarget = users
+    .filter((user) => {
+      return user.username == request.headers.username;
+    })
+    .at(0);
+  const todo = userTarget.todos.filter((todo, i) => {
     if (todo.id == request.params.id) {
       index = i;
       todo.done = true;
@@ -121,7 +130,12 @@ app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
 app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
   let index;
   let deleted;
-  const target = request.user.todos.filter((todo, i) => {
+  const userTarget = users
+    .filter((user) => {
+      return user.username == request.headers.username;
+    })
+    .at(0);
+  const target = userTarget.todos.filter((todo, i) => {
     if (todo.id == request.params.id) {
       index = i;
       deleted = { ...todo };
