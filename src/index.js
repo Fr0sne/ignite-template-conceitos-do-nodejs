@@ -36,15 +36,6 @@ function avoidUserDuplication(request, response, next) {
     error: "This username has already exists.",
   });
 }
-function targetUser(username) {
-  return (
-    users
-      .filter((user) => {
-        return user.username == username;
-      })
-      .at(0) || undefined
-  );
-}
 app.post("/users", avoidUserDuplication, (request, response) => {
   const { name, username } = request.body;
   const newUser = {
@@ -59,11 +50,7 @@ app.post("/users", avoidUserDuplication, (request, response) => {
 
 app.get("/todos", checksExistsUserAccount, (request, response) => {
   const { username } = request.headers;
-  const userTarget = users
-    .filter((user) => {
-      return user.username == username;
-    })
-    .at(0);
+  const userTarget = users.find((user) => user.username == username);
   return response.send(userTarget.todos);
 });
 
@@ -76,81 +63,57 @@ app.post("/todos", checksExistsUserAccount, (request, response) => {
     deadline: new Date(deadline),
     created_at: new Date(),
   };
-  const userTarget = users
-    .filter((user) => {
-      return user.username == request.headers.username;
-    })
-    .at(0);
+  const userTarget = users.find(
+    (user) => user.username == request.headers.username
+  );
+
   userTarget.todos.push(newTodo);
   return response.status(201).send(newTodo);
 });
 
 app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
   const { title, deadline } = request.body;
-  let index;
-  const userTarget = users
-    .filter((user) => {
-      return user.username == request.headers.username;
-    })
-    .at(0);
-  const todo = userTarget.todos.filter((todo, i) => {
-    if (todo.id == request.params.id) {
-      index = i;
-      todo.deadline = deadline;
-      todo.title = title;
-      return todo;
-    }
-  });
-  if (!todo.length)
+  const userTarget = users.find(
+    (user) => user.username == request.headers.username
+  );
+
+  const todo = userTarget.todos.find((todo) => todo.id == request.params.id);
+  if (!todo)
     return response.status(404).send({
       error: "No todo found with this id.",
     });
-  return response.send(todo.at(0));
+  todo.title = title;
+  todo.deadline = deadline;
+  return response.send(todo);
 });
 
 app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
-  let index;
-  const userTarget = users
-    .filter((user) => {
-      return user.username == request.headers.username;
-    })
-    .at(0);
-  const todo = userTarget.todos.filter((todo, i) => {
-    if (todo.id == request.params.id) {
-      index = i;
-      todo.done = true;
-      return todo;
-    }
-  });
-  if (!todo.length)
+  const userTarget = users.find(
+    (user) => user.username == request.headers.username
+  );
+
+  const todo = userTarget.todos.find((todo) => todo.id == request.params.id);
+  if (!todo)
     return response.status(404).send({ error: "No todo found with this id." });
-  return response.send(todo.at(0));
+  todo.done = true;
+  return response.send(todo);
 });
 
 app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
-  let index;
-  let deleted;
-  const userTarget = users
-    .filter((user) => {
-      return user.username == request.headers.username;
-    })
-    .at(0);
-  const target = userTarget.todos.filter((todo, i) => {
-    if (todo.id == request.params.id) {
-      index = i;
-      deleted = { ...todo };
-      return true;
-    }
-    if (i == request.user.todos.length - 1 && !index) {
-      notFound = true;
-    }
+  const userTarget = users.find(
+    (user) => user.username == request.headers.username
+  );
+
+  const todo = userTarget.todos.find((todo) => {
+    return todo.id == request.params.id;
   });
-  if (!target.length)
+  if (!todo)
     return response.status(404).send({
-      // error: true,
       error: "No todo found with this id.",
     });
-  request.user.todos.splice(index, 1);
+  userTarget.todos = userTarget.todos.filter((todo) => {
+    return todo.id != request.params.id;
+  });
   return response.status(204).send({
     message: "Todo deleted successfully.",
   });
